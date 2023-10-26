@@ -38,6 +38,11 @@ namespace BLL_Task
             return _context.Tasks.First(d => d.TaskId == taskId);
         }
 
+        public async Task<IdentityUser> GetUserAsync(string userId)
+        {
+            return await _context.Users.FirstAsync(x => x.Id == userId);
+        }
+
         public async Task<bool> UpdateProfileImage(string id, string imageUrl)
         {
            var user= await _userManager.FindByIdAsync(id);

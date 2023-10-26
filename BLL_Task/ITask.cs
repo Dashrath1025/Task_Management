@@ -1,4 +1,6 @@
-﻿using DAL_Task.Models;
+﻿using DAL_Task;
+using DAL_Task.Models;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +13,7 @@ namespace BLL_Task
     public interface ITask
     {
         TaskModel GetTaskById(int taskId);
+        Task<IdentityUser> GetUserAsync(string userId);
         bool CreateTask(TaskModel task);
         bool UpdateTask(TaskModel task);
         IEnumerable<TaskModel> GetAllTasks();

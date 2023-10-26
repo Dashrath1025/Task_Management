@@ -15,8 +15,8 @@ builder.Services.AddDbContext<AppDbContext>(op => op.UseSqlServer(builder.Config
 builder.Services.AddIdentity<AppUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
-builder.Services.AddScoped<ITask,TaskRepository>();
-builder.Services.AddScoped<IImageRepository,LocalImageRepository>();
+builder.Services.AddScoped<ITask, TaskRepository>();
+builder.Services.AddScoped<IImageRepository, LocalImageRepository>();
 builder.Services.AddAuthentication(op =>
 {
     op.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -34,7 +34,7 @@ builder.Services.AddAuthentication(op =>
             ValidAudience = builder.Configuration["JWT:Audience"],
             ValidIssuer = builder.Configuration["JWT:Issuer"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]))
-            
+
         };
     });
 
@@ -107,6 +107,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors(op =>
+{
+    op.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+});
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

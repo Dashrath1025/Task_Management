@@ -37,15 +37,15 @@ namespace Task_Management.Controllers
         public async Task<IActionResult> AddTask([FromBody] TaskModel model)
         {
 
-            var user = await userManager.FindByIdAsync(model.AssigneeId);
+          //  var user = await userManager.FindByIdAsync(model.AssigneeId);
 
-            if (user == null)
-            {
-                return NotFound("User not found");
-            }
+            //if (user == null)
+            //{
+            //    return NotFound("User not found");
+            //}
 
-            model.AssigneeId = user.Id;
-
+           // model.AssigneeId = user.Id;
+           // model.CreateDate = DateTime.Now;
             var tesk =  task.CreateTask(model);
 
             

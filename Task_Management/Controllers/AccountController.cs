@@ -3,16 +3,19 @@ using DAL_Task;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.Collections.Generic;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Web.WebPages;
 using Task_Management.Models;
 
 namespace Task_Management.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-  
+
     public class AccountController : ControllerBase
     {
         private readonly UserManager<AppUser> _userManager;
@@ -39,7 +42,7 @@ namespace Task_Management.Controllers
 
         public async Task<IActionResult> Register([FromBody] Register model)
         {
-            if(!await _roleManager.RoleExistsAsync(WC.AdminRole))
+            if (!await _roleManager.RoleExistsAsync(WC.AdminRole))
             {
                 await _roleManager.CreateAsync(new IdentityRole(WC.AdminRole));
                 await _roleManager.CreateAsync(new IdentityRole(WC.UserRole));
@@ -58,7 +61,7 @@ namespace Task_Management.Controllers
             {
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                UserName= model.UserName,
+                UserName = model.UserName,
                 SecurityStamp = Guid.NewGuid().ToString(),
                 Email = model.Email,
                 DOB = model.DOB,
@@ -67,7 +70,7 @@ namespace Task_Management.Controllers
                 Mobile = model.Mobile,
             };
 
-            var result= await _userManager.CreateAsync(user,model.Password);
+            var result = await _userManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
             {
@@ -111,7 +114,7 @@ namespace Task_Management.Controllers
 
             return Ok(new Response { Status = "Success", Message = "User Created Successfully!" });
 
-         }
+        }
 
         [HttpPost]
         [Route("login")]
@@ -119,9 +122,9 @@ namespace Task_Management.Controllers
         public async Task<IActionResult> Login([FromBody] Login model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if(user != null && await _userManager.CheckPasswordAsync(user, model.Password))
+            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                var userRoles= await _userManager.GetRolesAsync(user);
+                var userRoles = await _userManager.GetRolesAsync(user);
 
                 var authClaims = new List<Claim>
                 {
@@ -129,11 +132,12 @@ namespace Task_Management.Controllers
                     new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),
                 };
 
-                foreach(var userRole in userRoles)
+                foreach (var userRole in userRoles)
                 {
-                    authClaims.Add(new Claim(ClaimTypes.Role,userRole));
+                    authClaims.Add(new Claim("role", userRole));
+                    authClaims.Add(new Claim("id", user.Id));
                 }
- 
+
                 var token = GenerateJwtToken(authClaims);
 
                 return Ok(new
@@ -144,6 +148,32 @@ namespace Task_Management.Controllers
             }
             return Unauthorized();
         }
+
+
+        [HttpGet("getrole")]
+        public IActionResult GetRoles()
+        {
+            var users = _userManager.Users.ToList(); // Get all the users
+
+            var result = new List<object>();
+
+            foreach (var user in users)
+            {
+                var userRoles = _userManager.GetRolesAsync(user).Result; // Get roles for each user
+
+                foreach (var roleName in userRoles)
+                {
+                    if (roleName != "Admin") // Check if the role is not 'Admin'
+                    {
+                        result.Add(new { Id = user.Id, Name = user.UserName }); // Add userId and roleName to the result list
+                    }
+                }
+            }
+
+            return Ok(result); // Return the list of roles and their corresponding IDs
+        }
+
+
 
 
         //private string GenerateJwtToken(Register user)
@@ -173,12 +203,12 @@ namespace Task_Management.Controllers
         {
             var authSigninKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]));
 
-            var token= new JwtSecurityToken(
+            var token = new JwtSecurityToken(
                 issuer: _configuration["JWT:Issuer"],
                 audience: _configuration["JWT:Audience"],
                 expires: DateTime.UtcNow.AddMinutes(10),
                 claims: authClaims,
-                signingCredentials: new SigningCredentials(authSigninKey,SecurityAlgorithms.HmacSha256));
+                signingCredentials: new SigningCredentials(authSigninKey, SecurityAlgorithms.HmacSha256));
             return token;
         }
 
@@ -224,9 +254,9 @@ namespace Task_Management.Controllers
         //}
 
         [HttpPost]
-        [Route("upload")]
+        [Route("{userId}/upload")]
 
-        public async Task<IActionResult> UploadImage([FromForm] string id,IFormFile profileImage)
+        public async Task<IActionResult> UploadImage([FromRoute] string userId, IFormFile profileImage)
         {
             var validextension = new List<string>
             {
@@ -235,30 +265,45 @@ namespace Task_Management.Controllers
                 ".png"
             };
 
-            if(profileImage != null && profileImage.Length>0)
+            if (profileImage != null && profileImage.Length > 0)
             {
-                if(await task.Exists(id))
+                if (await task.Exists(userId))
                 {
                     var extension = Path.GetExtension(profileImage.FileName);
 
                     if (validextension.Contains(extension))
                     {
-                        var filename= Guid.NewGuid()+Path.GetExtension(profileImage.FileName);
+                        var filename = Guid.NewGuid() + Path.GetExtension(profileImage.FileName);
 
-                        var fileImagePath= await imageRepository.Upload(profileImage, filename);
+                        var fileImagePath = await imageRepository.Upload(profileImage, filename);
 
-                        if(await task.UpdateProfileImage(id, fileImagePath))
+                        if (await task.UpdateProfileImage(userId, fileImagePath))
                         {
                             return Ok(fileImagePath);
                         }
 
                         return StatusCode(StatusCodes.Status500InternalServerError, "Error uploading image");
-                    } 
+                    }
                 }
                 return BadRequest("This is not valid image format");
             }
             return NotFound();
-         }
+        }
+
+        [HttpGet]
+        [Route("{userId:guid}")]
+
+        public async Task<IActionResult> GetUser([FromRoute] string userId)
+        {
+            var user = await task.GetUserAsync(userId);
+
+            if(user == null)
+            {
+                    return NotFound();
+            }
+
+            return Ok(user);
+        }
 
     }
 }

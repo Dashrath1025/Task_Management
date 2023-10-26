@@ -12,8 +12,8 @@ namespace DAL_Task.Models
 
 
         public string Description { get; set; } = string.Empty;
-        [Required]
         public DateTime CreateDate { get; set; } = DateTime.Now;
+
         [Required]
         public DateTime DueDate { get; set; }
         [Required]
