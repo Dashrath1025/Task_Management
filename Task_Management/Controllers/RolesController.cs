@@ -40,10 +40,7 @@ namespace Task_Management.Controllers
                 return Ok("Role already exist!");
             }
 
-            if(string.IsNullOrEmpty(roleobj.Id))
-            {
-                await _roleManager.CreateAsync(new IdentityRole { Name = roleobj.Name });
-            }
+            await _roleManager.CreateAsync(new IdentityRole { Name = roleobj.Name });
             return Ok("Role created success");
         }
 
@@ -71,6 +68,7 @@ namespace Task_Management.Controllers
 
         [HttpDelete("deleterole")]
         public async Task<IActionResult> Delete(string id)
+        
         {
             var objfromDb= await _db.Roles.FirstOrDefaultAsync(t=>t.Id==id);
 
@@ -88,6 +86,20 @@ namespace Task_Management.Controllers
 
             await _roleManager.DeleteAsync(objfromDb);
             return Ok("Role Deleted success");
+        }
+
+        [HttpGet("getid/{id:guid}")]
+
+        public async Task<IActionResult> GetRole([FromRoute] string id)
+        {
+            var obj= await _db.Roles.FirstOrDefaultAsync(w=>w.Id==id);
+
+            if (obj==null)
+            {
+                return NotFound();
+            }
+
+            return Ok(obj);
         }
 
     }
