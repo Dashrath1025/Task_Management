@@ -4,6 +4,7 @@ using DAL_Task;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -111,6 +112,15 @@ app.UseCors(op =>
 {
     op.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
 });
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(app.Environment.ContentRootPath, "Resources")),
+    RequestPath = "/Resources"
+
+});
+
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

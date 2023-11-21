@@ -21,5 +21,8 @@ namespace DAL_Task.Models
         [Required]
         public string? AssigneeId { get; set; }
 
+        [Required]
+        public string Priority { get; set; } = "medium";
+
     }
 }

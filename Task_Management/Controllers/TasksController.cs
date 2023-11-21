@@ -95,6 +95,36 @@ namespace Task_Management.Controllers
 
         }
 
-        
+        [HttpGet("gettaskbyuser")]
+        public IEnumerable<TaskModel> GetTasksByUser(string userId)
+        {
+            var tasks = task.GetAllTasks().Where(t => t.AssigneeId == userId);
+            return tasks;
+        }
+
+
+        [HttpPut("updatestatus")]
+        public IActionResult UpdateTaskStatus(int taskId,  string status)
+        {
+            var existingTask = task.GetTaskById(taskId);
+
+            if (existingTask == null)
+            {
+                return NotFound();
+            }
+
+            existingTask.Status = status;
+            var update = task.UpdateTask(existingTask);
+            return Ok(update);
+        }
+
+        [HttpGet]
+        [Route("gettaskbyid")]
+        public TaskModel GetTaskById(int taskId)
+        {
+            return task.GetTaskById(taskId);
+        }
+
+
     }
 }

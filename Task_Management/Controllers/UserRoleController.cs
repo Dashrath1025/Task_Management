@@ -2,6 +2,7 @@
 using DAL_Task;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,11 +19,13 @@ namespace Task_Management.Controllers
     {
         private readonly AppDbContext _db;
         private readonly UserManager<AppUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public UserController(UserManager<AppUser> userManager, AppDbContext db)
+        public UserController(UserManager<AppUser> userManager, AppDbContext db,RoleManager<IdentityRole> roleManager)
         {
             _db = db;
             _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         [HttpGet("getroles")]
@@ -48,78 +51,112 @@ namespace Task_Management.Controllers
 
         }
 
-        //[HttpGet("{userId}")]
-        //public IActionResult Edit(string userId)
-        //{
-        //    var objFromDb = _db.appUsers.FirstOrDefault(u => u.Id == userId);
-        //    if (objFromDb == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    var userRole = _db.UserRoles.ToList();
-        //    var roles = _db.Roles.ToList();
-        //    var role = userRole.FirstOrDefault(u => u.UserId == objFromDb.Id);
-        //    if (role != null)
-        //    {
-        //        objFromDb.RoleId = roles.FirstOrDefault(u => u.Id == role.RoleId).Id;
-        //    }
-        //    objFromDb.RoleList = _db.Roles.Select(u => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-        //    {
-        //        Text = u.Name,
-        //        Value = u.Id
-        //    });
-        //    return View(objFromDb);
-        //}
+        [HttpGet("{userId:guid}")]
+        public async Task<IActionResult> Edit([FromRoute]string userId)
+        {
+            var objFromDb =await  _db.appUsers.FirstOrDefaultAsync(u => u.Id == userId);
+            if (objFromDb == null)
+            {
+                return NotFound();
+            }
+            var userRole = await _db.UserRoles.ToListAsync();
+            var roles = await _db.Roles.ToListAsync();
+            var role =  userRole.FirstOrDefault(u => u.UserId == objFromDb.Id);
+            if (role != null)
+            {
+                objFromDb.RoleId = roles.First(u => u.Id == role.RoleId).Id;
+            }
+            //objFromDb.RoleList = _db.Roles.Select(u => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+            //{
+            //    Text = u.Name,
+            //    Value = u.Id
+            //});
+            return View(objFromDb);
+        }
 
 
-        //[HttpPut("updaterole")]
+        [HttpPost("updaterole")]
+        public async Task<IActionResult> AssignRole(string userEmail, string roleName)
+        {
+            var user = await _userManager.FindByEmailAsync(userEmail);
+            if (user == null)
+            {
+                return BadRequest("User not found");
+            }
 
-        //public async Task<IActionResult> Update(AppUser user)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        var objFromDb = _db.appUsers.FirstOrDefault(u => u.Id == user.Id);
-        //        if (objFromDb == null)
-        //        {
-        //            return NotFound();
-        //        }
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var existingRole = await _roleManager.FindByNameAsync(roleName);
 
-        //        var userRole = _db.UserRoles.FirstOrDefault(e => e.UserId == objFromDb.Id);
-        //        if (userRole != null)
-        //        {
-        //            var previuousRole = _db.Roles.Where(u => u.Id == userRole.RoleId).Select(e => e.Name).FirstOrDefault();
+            if (existingRole == null)
+            {
+                return BadRequest("Role not found");
+            }
 
-        //            await _userManager.RemoveFromRoleAsync(objFromDb, previuousRole);
+            foreach (var role in userRoles)
+            {
+                await _userManager.RemoveFromRoleAsync(user, role);
+            }
 
-        //        }
-        //        await _userManager.AddToRoleAsync(objFromDb, _db.Roles.FirstOrDefault(u => u.Id == user.RoleId).Name);
-        //        _db.SaveChanges();
-        //        return Ok("User role assign success");
-        //    }
+            var result = await _userManager.AddToRoleAsync(user, roleName);
 
-        //    user.RoleList = _db.Roles.Select(u => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-        //    {
-        //        Text = u.Name,
-        //        Value = u.Id
-        //    });
-        //    return Ok(user);
-        //}
+            if (result.Succeeded)
+            {
+                return Ok("Role assigned successfully");
+            }
+            else
+            {
+                return BadRequest("Failed to assign role");
+            }
+        }
+
+        [HttpGet("getrolename/{userId:guid}")]
+        public async Task<IActionResult> GetRoleNameByUserId([FromRoute] string userId)
+        {
+            AppUser user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            if (roles != null && roles.Any())
+            {
+                var roleName = await _roleManager.FindByNameAsync(roles[0]);
+                if (roleName != null)
+                {
+                    return Ok(roleName.Name);
+                }
+            }
+
+            return NotFound();
+        }
 
 
-        //[HttpPost]
+        [HttpPost("lockunlock")]
+        public IActionResult LockUnlock(string userId)
+        {
+            var objFromDb = _db.appUsers.FirstOrDefault(e => e.Id == userId);
 
-        //public IActionResult LockUnlcok(string userId)
-        //{
-        //    var objFromDb = _db.ApplicationUser.FirstOrDefault(e => e.Id == userId);
-        //    if (objFromDb == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    if (objFromDb.LockoutEnd != null && objFromDb.LockoutEnd > DateTime.Now)
-        //    {
-        //        objFromDb.LockoutEnd = DateTime.Now;
+            if (objFromDb == null)
+            {
+                return NotFound();
+            }
 
-        //    }
-        //}
+            if (objFromDb.LockoutEnd != null && objFromDb.LockoutEnd > DateTime.Now)
+            {
+                objFromDb.LockoutEnd = DateTime.Now;
+                _db.SaveChanges();
+                return Ok(new { message = "unlocked" });
+            }
+            else
+            {
+                objFromDb.LockoutEnd = DateTime.Now.AddMonths(1);
+                _db.SaveChanges();
+                return Ok(new { message = "locked" });
+            }
+        }
+
+
+
     }
 }

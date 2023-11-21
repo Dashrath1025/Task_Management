@@ -16,6 +16,7 @@ namespace Task_Management.Controllers
     public class AccountController : ControllerBase
     {
         private readonly UserManager<AppUser> _userManager;
+        private readonly SignInManager<AppUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _webHostEnvironment;
@@ -23,7 +24,7 @@ namespace Task_Management.Controllers
         private readonly IImageRepository imageRepository;
 
 
-        public AccountController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IWebHostEnvironment webHostEnvironment, ITask task, IImageRepository imageRepository)
+        public AccountController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IWebHostEnvironment webHostEnvironment, ITask task, IImageRepository imageRepository, SignInManager<AppUser> signInManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -31,6 +32,7 @@ namespace Task_Management.Controllers
             _webHostEnvironment = webHostEnvironment;
             this.task = task;
             this.imageRepository = imageRepository;
+            _signInManager = signInManager;
         }
 
 
@@ -119,31 +121,48 @@ namespace Task_Management.Controllers
         public async Task<IActionResult> Login([FromBody] Login model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
+            if (user != null)
             {
-                var userRoles = await _userManager.GetRolesAsync(user);
+                var signInResult = await _signInManager.PasswordSignInAsync(user, model.Password, lockoutOnFailure: true, isPersistent: false);
 
-                var authClaims = new List<Claim>
+                if (signInResult.Succeeded)
                 {
-                    new Claim(ClaimTypes.Name,user.UserName),
-                    new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),
-                };
+                    var userRoles = await _userManager.GetRolesAsync(user);
 
-                foreach (var userRole in userRoles)
-                {
-                    authClaims.Add(new Claim("role", userRole));
-                    authClaims.Add(new Claim("id", user.Id));
+                    var authClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name,user.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),
+            };
+
+                    foreach (var userRole in userRoles)
+                    {
+                        authClaims.Add(new Claim("role", userRole));
+                        authClaims.Add(new Claim("id", user.Id));
+                    }
+
+                    var token = GenerateJwtToken(authClaims);
+
+                    return Ok(new
+                    {
+                        token = new JwtSecurityTokenHandler().WriteToken(token),
+                        expiration = token.ValidTo
+                    });
                 }
-
-                var token = GenerateJwtToken(authClaims);
-
-                return Ok(new
+                else if (signInResult.IsLockedOut)
                 {
-                    token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
-                });
+                    return StatusCode(423, "Locked"); // Return a specific status code indicating that the user is locked out
+                }
+                else if (signInResult.IsNotAllowed)
+                {
+                    return StatusCode(403, "User is not allowed to sign in. Please contact the system administrator.");
+                }
+                else
+                {
+                    return Unauthorized("Invalid");
+                }
             }
-            return Unauthorized();
+            return Unauthorized("Invalid");
         }
 
 
@@ -294,13 +313,44 @@ namespace Task_Management.Controllers
         {
             var user = await task.GetUserAsync(userId);
 
-            if(user == null)
+            if (user == null)
             {
-                    return NotFound();
+                return NotFound();
             }
 
             return Ok(user);
         }
+
+        [HttpPut("updateprofile")]
+        public async Task<IActionResult> UpdateUserProfile([FromBody] UserProfileUpdate model)
+        {
+            if (model.UserId == null)
+            {
+                return BadRequest("User ID is null.");
+            }
+
+            var user = await _userManager.FindByIdAsync(model.UserId);
+
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            user.Mobile = model.Mobile;
+            user.City = model.City;
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                return Ok(new Response { Status = "Success", Message = "Profile Updated Successfully" });
+            }
+            else
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "Profile update failed!" });
+            }
+        }
+
 
     }
 }
