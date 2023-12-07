@@ -48,7 +48,7 @@ namespace Task_Management.Controllers
             }
 
 
-            var userExist = await _userManager.FindByNameAsync(model.UserName);
+            var userExist = await _userManager.FindByNameAsync(model.FirstName);
             if (userExist != null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User Already Exist!" });
@@ -60,7 +60,7 @@ namespace Task_Management.Controllers
             {
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                UserName = model.UserName,
+                UserName = model.FirstName,
                 SecurityStamp = Guid.NewGuid().ToString(),
                 Email = model.Email,
                 DOB = model.DOB,
@@ -131,7 +131,7 @@ namespace Task_Management.Controllers
 
                     var authClaims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name,user.UserName),
+                new Claim("name",user.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),
             };
 
@@ -181,7 +181,7 @@ namespace Task_Management.Controllers
                 {
                     if (roleName != "Admin") // Check if the role is not 'Admin'
                     {
-                        result.Add(new { Id = user.Id, Name = user.UserName }); // Add userId and roleName to the result list
+                        result.Add(new { Id = user.Id, Name = user.FirstName+" " + user.LastName }); ; // Add userId and roleName to the result list
                     }
                 }
             }
@@ -351,6 +351,7 @@ namespace Task_Management.Controllers
             }
         }
 
+      
 
     }
 }

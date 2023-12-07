@@ -12,8 +12,9 @@ namespace Task_Management.Models
         [Required]
         public string LastName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage ="User name is required")]
-       public string UserName { get; set; }= string.Empty;
+       // [Required(ErrorMessage ="User name is required")]
+       //public string UserName { get; set; }= string.Empty;
+
         [EmailAddress]
         public string Email { get; set; }=string.Empty;
 
@@ -28,7 +29,7 @@ namespace Task_Management.Models
 
         [Required]
         [Display(Name = "Mobile No.")]
-        public int Mobile { get; set; }
+        public double Mobile { get; set; }
         [Required]
         public string City { get; set; }= string.Empty;
 

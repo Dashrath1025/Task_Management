@@ -22,7 +22,7 @@ namespace DAL_Task
 
         [Required]
         [Display(Name ="Mobile No.")]
-        public int Mobile { get; set; }
+        public double Mobile { get; set; }
         [Required]
         public string? City { get; set; }
         public string? Image { get; set; }

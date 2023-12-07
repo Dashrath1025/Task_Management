@@ -70,30 +70,55 @@ namespace Task_Management.Controllers
 
         [HttpGet("filtertask")]
 
-        public IEnumerable<TaskModel> GetAll([FromQuery] DateTime? dueDate, string? status,string? assignee)
+        public ActionResult<IEnumerable<TaskModel>> GetAll([FromQuery] DateTime? dueDate, string? status, string? assignee, string userId)
         {
-            var alltasks= task.GetAllTasks();
+            var allTasks = task.GetAllTasks().Where(t => t.AssigneeId == userId);
 
-            var filteredTask = alltasks;
+            var filteredTasks = allTasks;
 
             if (dueDate.HasValue)
             {
-                filteredTask= filteredTask.Where(t=>t.DueDate.Date==dueDate.Value.Date);
+                // Update the condition to filter tasks where the DueDate is before the specified date
+                filteredTasks = filteredTasks.Where(t => t.DueDate.Date < dueDate.Value.Date);
             }
 
-            if(!string.IsNullOrWhiteSpace(status))
+            if (!string.IsNullOrWhiteSpace(status))
             {
-                filteredTask=filteredTask.Where(e=>e.Status.ToLower()==status.ToLower());
+                filteredTasks = filteredTasks.Where(e => e.Status.ToLower() == status.ToLower());
             }
 
-            if(!string.IsNullOrWhiteSpace(assignee))
+            if (!string.IsNullOrWhiteSpace(assignee))
             {
-                filteredTask=filteredTask.Where(r=>r.AssigneeId==assignee);
+                filteredTasks = filteredTasks.Where(r => r.AssigneeId == assignee);
             }
 
-            return filteredTask.ToList();   
+            var result = filteredTasks.ToList();
 
+            if (result.Count == 0)
+            {
+                // No data found for the given filters
+                return NotFound("No data found for this filter");
+
+            }
+
+            return Ok(result);
         }
+
+        [HttpGet]
+        [Route("ClearTasks")]
+        public ActionResult<IEnumerable<TaskModel>> ClearTasks(string userId)
+        {
+            var allTasks = task.GetAllTasks().Where(t => t.AssigneeId == userId).ToList();
+
+            if (allTasks.Count == 0)
+            {
+                // No tasks found for the user
+                return NotFound("No tasks found for the specified user.");
+            }
+
+            return Ok(allTasks);
+        }
+
 
         [HttpGet("gettaskbyuser")]
         public IEnumerable<TaskModel> GetTasksByUser(string userId)

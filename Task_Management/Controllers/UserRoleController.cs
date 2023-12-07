@@ -3,12 +3,7 @@ using DAL_Task;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-
+using Task_Management.Models;
 
 namespace Task_Management.Controllers
 {
@@ -51,28 +46,52 @@ namespace Task_Management.Controllers
 
         }
 
-        [HttpGet("{userId:guid}")]
-        public async Task<IActionResult> Edit([FromRoute]string userId)
-        {
-            var objFromDb =await  _db.appUsers.FirstOrDefaultAsync(u => u.Id == userId);
-            if (objFromDb == null)
-            {
-                return NotFound();
-            }
-            var userRole = await _db.UserRoles.ToListAsync();
-            var roles = await _db.Roles.ToListAsync();
-            var role =  userRole.FirstOrDefault(u => u.UserId == objFromDb.Id);
-            if (role != null)
-            {
-                objFromDb.RoleId = roles.First(u => u.Id == role.RoleId).Id;
-            }
-            //objFromDb.RoleList = _db.Roles.Select(u => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
-            //{
-            //    Text = u.Name,
-            //    Value = u.Id
-            //});
-            return View(objFromDb);
-        }
+        //[HttpGet("getrole")]
+        //public async Task<IActionResult> Edit(AppUser user)
+        //{
+        //    var objFromDb = await _db.appUsers.FirstOrDefaultAsync(u => u.Id == userId);
+        //    if (objFromDb == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    var userRole = await _db.UserRoles.ToListAsync();
+        //    var roles = await _db.Roles.ToListAsync();
+        //    var role = userRole.FirstOrDefault(u => u.UserId == objFromDb.Id);
+        //    if (role != null)
+        //    {
+        //        objFromDb.RoleId = roles.First(u => u.Id == role.RoleId).Id;
+        //    }
+        //    objFromDb.RoleList = _db.Roles.Select(u => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+        //    {
+        //        Text = u.Name,
+        //        Value = u.Id
+        //    });
+        //    return View(objFromDb);
+
+        //    var userrole = await _db.UserRoles.ToListAsync();
+
+
+        //    var roles= await _db.Roles.ToListAsync();
+
+        //    var role=userrole.FirstOrDefault(each=>each.UserId == user.Id);
+
+        //    var userroles = user.Role = roles.FirstOrDefault(r => r.Id == role.RoleId).Name;
+
+
+        //    var allroles= _roleManager.Roles.Select(r => r.Name).ToList();
+
+
+        //    var response = new UserResponse
+        //    {
+        //        UserId = user.Id,
+        //        Email = user.Email,
+        //        RoleId = role.RoleId,
+        //        Name = user.UserName,
+        //        Rolelist = allroles
+        //    };
+
+        //    return Ok(response);
+        //}
 
 
         [HttpPost("updaterole")]
@@ -101,7 +120,7 @@ namespace Task_Management.Controllers
 
             if (result.Succeeded)
             {
-                return Ok("Role assigned successfully");
+                return Ok(new Response{ Status="Success",Message="User Assign Successfully"});
             }
             else
             {
@@ -112,24 +131,39 @@ namespace Task_Management.Controllers
         [HttpGet("getrolename/{userId:guid}")]
         public async Task<IActionResult> GetRoleNameByUserId([FromRoute] string userId)
         {
-            AppUser user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
+            try
             {
-                return NotFound();
-            }
+                AppUser user = await _userManager.FindByIdAsync(userId);
 
-            var roles = await _userManager.GetRolesAsync(user);
-            if (roles != null && roles.Any())
-            {
-                var roleName = await _roleManager.FindByNameAsync(roles[0]);
-                if (roleName != null)
+                if (user == null)
                 {
-                    return Ok(roleName.Name);
+                    return NotFound("User not found");
                 }
-            }
 
-            return NotFound();
+                var roles = await _userManager.GetRolesAsync(user);
+
+                if (roles != null && roles.Any())
+                {
+                    var roleName = await _roleManager.FindByNameAsync(roles[0]);
+
+                    if (roleName != null)
+                    {
+                        var role = roleName.Name;
+                        return Ok(role.ToString());
+                    }
+                }
+
+                return NotFound("Role not found for the user");
+            }
+            catch (Exception ex)
+            {
+                // Log the exception for debugging purposes
+                // You might want to log the exception details using a logging library
+                Console.Error.WriteLine($"Error in GetRoleNameByUserId: {ex.Message}");
+                return StatusCode(500, "Internal Server Error");
+            }
         }
+
 
 
         [HttpPost("lockunlock")]
