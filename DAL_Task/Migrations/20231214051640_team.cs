@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace DAL_Task.Migrations
 {
-    public partial class identity : Migration
+    public partial class team : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -28,6 +28,14 @@ namespace DAL_Task.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Discriminator = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DOB = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Gender = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Mobile = table.Column<double>(type: "float", nullable: true),
+                    City = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Image = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -46,6 +54,39 @@ namespace DAL_Task.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tasks",
+                columns: table => new
+                {
+                    TaskId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AssigneeId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Priority = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tasks", x => x.TaskId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Teams",
+                columns: table => new
+                {
+                    TeamId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TeamName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TeamLeadId = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Teams", x => x.TeamId);
                 });
 
             migrationBuilder.CreateTable(
@@ -210,6 +251,12 @@ namespace DAL_Task.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "Tasks");
+
+            migrationBuilder.DropTable(
+                name: "Teams");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

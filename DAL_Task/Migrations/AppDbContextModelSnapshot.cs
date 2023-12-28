@@ -61,6 +61,27 @@ namespace DAL_Task.Migrations
                     b.ToTable("Tasks");
                 });
 
+            modelBuilder.Entity("DAL_Task.Team", b =>
+                {
+                    b.Property<int>("TeamId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TeamId"), 1L, 1);
+
+                    b.Property<string>("TeamLeadId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TeamName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TeamId");
+
+                    b.ToTable("Teams");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -265,6 +286,28 @@ namespace DAL_Task.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("TeamMember", b =>
+                {
+                    b.Property<int>("TeamMemberId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TeamMemberId"), 1L, 1);
+
+                    b.Property<string>("MemberId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TeamMemberId");
+
+                    b.HasIndex("TId");
+
+                    b.ToTable("TeamMembers");
+                });
+
             modelBuilder.Entity("DAL_Task.AppUser", b =>
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
@@ -346,6 +389,17 @@ namespace DAL_Task.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("TeamMember", b =>
+                {
+                    b.HasOne("DAL_Task.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Team");
                 });
 #pragma warning restore 612, 618
         }

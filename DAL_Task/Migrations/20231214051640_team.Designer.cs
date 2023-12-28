@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAL_Task.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20231009102141_extend")]
-    partial class extend
+    [Migration("20231214051640_team")]
+    partial class team
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,6 +23,66 @@ namespace DAL_Task.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
+
+            modelBuilder.Entity("DAL_Task.Models.TaskModel", b =>
+                {
+                    b.Property<int>("TaskId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TaskId"), 1L, 1);
+
+                    b.Property<string>("AssigneeId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TaskId");
+
+                    b.ToTable("Tasks");
+                });
+
+            modelBuilder.Entity("DAL_Task.Team", b =>
+                {
+                    b.Property<int>("TeamId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TeamId"), 1L, 1);
+
+                    b.Property<string>("TeamLeadId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TeamName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TeamId");
+
+                    b.ToTable("Teams");
+                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -239,12 +299,23 @@ namespace DAL_Task.Migrations
                     b.Property<DateTime>("DOB")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Gender")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Mobile")
-                        .HasColumnType("int");
+                    b.Property<string>("Image")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("Mobile")
+                        .HasColumnType("float");
 
                     b.HasDiscriminator().HasValue("AppUser");
                 });

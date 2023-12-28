@@ -189,30 +189,30 @@ namespace Task_Management.Controllers
             return Ok(result); // Return the list of roles and their corresponding IDs
         }
 
-
-
-
-        //private string GenerateJwtToken(Register user)
+        //[HttpGet("getusers")]
+        //public IActionResult GetUsers()
         //{
-        //    var tokenhandler = new JwtSecurityTokenHandler();
-        //    var key = Encoding.ASCII.GetBytes(_configuration["JWT:Key"]);
-        //    var tokenDescriptor = new SecurityTokenDescriptor
+        //    var users = _userManager.Users.ToList(); // Get all the users
+
+        //    var result = new List<object>();
+
+        //    foreach (var user in users)
         //    {
-        //        Subject = new System.Security.Claims.ClaimsIdentity(new Claim[]
+        //        // Check if the user is not a team lead
+        //        if (!user.IsTeamLead)
         //        {
-        //            new Claim("email", user.Email),
-        //            new Claim("userName", user.UserName),
-        //            new Claim("dob", user.DOB.ToString()),
-        //            new Claim("mobile", user.Mobile.ToString()),
-        //            new Claim("gender", user.Gender),
-        //            new Claim("city", user.City),
-        //        }),
-        //        Expires = DateTime.UtcNow.AddMinutes(10),
-        //        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
-        //    };
-        //    var token = tokenhandler.CreateToken(tokenDescriptor);
-        //    return tokenhandler.WriteToken(token);
+        //            result.Add(new { Id = user.Id, Name = $"{user.FirstName} {user.LastName}" });
+        //        }
+        //    }
+
+        //    return Ok(result); // Return the list of users and their corresponding IDs
         //}
+
+
+
+
+
+
 
 
         private JwtSecurityToken GenerateJwtToken(List<Claim> authClaims)
@@ -228,46 +228,7 @@ namespace Task_Management.Controllers
             return token;
         }
 
-        //[HttpPut("updateprofile")]
-
-        //public async Task<IActionResult> UpdateUserProfile([FromForm] UserProfileUpdate model)
-        //{
-        //    var user = await _userManager.FindByNameAsync(User?.Identity?.Name);
-
-        //    if (user == null)
-        //    {
-        //        return NotFound("User not found");
-        //    }
-
-        //    var files= HttpContext.Request.Form.Files;
-        //    string webRootPath= _webHostEnvironment.WebRootPath;
-
-        //    string upload = webRootPath + WC.ImagePath;
-        //    var filename = Guid.NewGuid().ToString();
-        //    string extension = Path.GetExtension(files[0].FileName);
-
-        //    using(var filestream= new FileStream(Path.Combine(upload, filename + extension), FileMode.Create))
-        //    {
-        //        files[0].CopyTo(filestream);
-        //    }
-
-        //    model.Image = filename + extension;
-
-        //    user.Mobile = model.Mobile;
-        //    user.City= model.City;
-
-        //    var result = await _userManager.UpdateAsync(user);
-
-        //    if (result.Succeeded)
-        //    {
-        //        return Ok(new Response { Status = "Success", Message = "Profile Updated Successfully" });
-        //    }
-        //    else
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "Profile update failed!" });
-        //    }
-
-        //}
+        
 
         [HttpPost]
         [Route("{userId}/upload")]

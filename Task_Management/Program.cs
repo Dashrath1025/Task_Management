@@ -1,5 +1,6 @@
 
 using BLL_Task;
+using BLL_Task.Repositories;
 using DAL_Task;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -18,6 +19,10 @@ builder.Services.AddIdentity<AppUser, IdentityRole>()
     .AddDefaultTokenProviders();
 builder.Services.AddScoped<ITask, TaskRepository>();
 builder.Services.AddScoped<IImageRepository, LocalImageRepository>();
+builder.Services.AddScoped<ITeamRepository,TeamRepository>();
+builder.Services.AddScoped<ITeamMember,TeamMemberRepository>();
+
+
 builder.Services.AddAuthentication(op =>
 {
     op.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
